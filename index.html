@@ -450,6 +450,7 @@ function downloadPDF(){
   const el=document.querySelector('.main');
   // Temporarily open all categories for PDF
   document.querySelectorAll('.category').forEach(c=>c.classList.add('open'));
+  const {score,checkedCount,total}=calcScore();
   const opt={
     margin:[10,10,10,10],
     filename:'GuardRails-GenAI-Security-Checklist.pdf',
@@ -458,16 +459,18 @@ function downloadPDF(){
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
     pagebreak:{mode:['avoid-all','css','legacy']}
   };
-  // Add score header to PDF
-  const header=document.querySelector('.header').cloneNode(true);
-  header.style.position='relative';
   const wrapper=document.createElement('div');
-  wrapper.style.background='#0d1117';
-  wrapper.style.color='#e6edf3';
-  wrapper.style.fontFamily="'Segoe UI',system-ui,sans-serif";
-  wrapper.appendChild(header);
-  wrapper.appendChild(el.cloneNode(true));
-  // Remove buttons from clone
+  wrapper.style.cssText='background:#0d1117;color:#e6edf3;font-family:Segoe UI,system-ui,sans-serif;padding:0;';
+  // Compact PDF header — no clone, avoids blank first page
+  const pdfHeader=document.createElement('div');
+  pdfHeader.style.cssText='padding:16px 0 12px;border-bottom:2px solid #30363d;margin-bottom:16px;';
+  pdfHeader.innerHTML=`<div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#50E6FF,#0078D4,#773ADC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">GuardRails</div>`
+    +`<div style="font-size:11px;color:#8b949e;margin-top:2px;">GenAI Security &amp; Governance Checklist for Azure Enterprise</div>`
+    +`<div style="margin-top:8px;font-size:13px;color:#e6edf3;">Score: <strong>${Math.round(score)}/100</strong> &mdash; ${checkedCount} of ${total} controls implemented</div>`;
+  wrapper.appendChild(pdfHeader);
+  const mainClone=el.cloneNode(true);
+  wrapper.appendChild(mainClone);
+  // Remove interactive elements from clone
   wrapper.querySelectorAll('.btn,.cat-btn,.search-section').forEach(b=>b.remove());
   html2pdf().set(opt).from(wrapper).save();
 }
