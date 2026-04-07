@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuardRails — GenAI Security &amp; Governance Checklist</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/black.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/monokai.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+
+  :root {
+    --azure-blue: #0078D4;
+    --azure-cyan: #50E6FF;
+    --azure-purple: #773ADC;
+    --bg-dark: #0d1117;
+    --bg-card: rgba(255,255,255,0.05);
+    --text-primary: #e6edf3;
+    --text-muted: #8b949e;
+  }
+
+  .reveal {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-primary);
+  }
+
+  .reveal .slides section {
+    background: var(--bg-dark);
+  }
+
+  .reveal h1, .reveal h2, .reveal h3 {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -0.02em;
+  }
+
+  .reveal h1 {
+    font-size: 2.8em;
+    background: linear-gradient(135deg, var(--azure-cyan), var(--azure-blue), var(--azure-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .reveal h2 {
+    font-size: 1.8em;
+    color: var(--azure-cyan);
+    margin-bottom: 0.6em;
+  }
+
+  .reveal h3 {
+    font-size: 1.3em;
+    color: var(--azure-blue);
+  }
+
+  .reveal p, .reveal li {
+    font-size: 0.75em;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+
+  .reveal ul { list-style: none; padding: 0; }
+  .reveal ul li {
+    padding: 0.25em 0 0.25em 1.4em;
+    position: relative;
+  }
+  .reveal ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--azure-cyan);
+    font-weight: bold;
+  }
+
+  .tagline {
+    font-size: 1.2em !important;
+    color: var(--text-muted) !important;
+    font-weight: 300;
+    margin-top: 0.5em;
+    font-style: italic;
+  }
+
+  .gradient-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--azure-cyan), var(--azure-blue), var(--azure-purple));
+    border-radius: 2px;
+    margin: 1em auto;
+    width: 60%;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1em;
+    margin-top: 1em;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(80, 230, 255, 0.15);
+    border-radius: 12px;
+    padding: 1.2em 0.8em;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .stat-card .number {
+    font-size: 2.2em;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--azure-cyan), var(--azure-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+    line-height: 1.2;
+  }
+
+  .stat-card .label {
+    font-size: 0.65em;
+    color: var(--text-muted);
+    margin-top: 0.3em;
+    display: block;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6em;
+    margin-top: 0.8em;
+  }
+
+  .cat-pill {
+    background: var(--bg-card);
+    border: 1px solid rgba(80, 230, 255, 0.12);
+    border-radius: 8px;
+    padding: 0.5em 0.7em;
+    font-size: 0.55em;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .cat-pill .icon { font-size: 1.5em; display: block; margin-bottom: 0.2em; }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8em;
+    margin-top: 0.8em;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(80, 230, 255, 0.1);
+    border-radius: 10px;
+    padding: 1em;
+    text-align: left;
+  }
+
+  .feature-card .icon {
+    font-size: 1.6em;
+    margin-bottom: 0.3em;
+    display: block;
+  }
+
+  .feature-card h4 {
+    color: var(--azure-cyan);
+    font-size: 0.7em;
+    margin: 0 0 0.3em 0;
+    font-weight: 600;
+  }
+
+  .feature-card p {
+    font-size: 0.55em !important;
+    color: var(--text-muted) !important;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .arch-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(80, 230, 255, 0.15);
+    border-radius: 12px;
+    padding: 1.2em;
+    margin: 0.5em auto;
+    max-width: 85%;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8em;
+    flex-wrap: wrap;
+    margin-top: 0.8em;
+  }
+
+  .arch-node {
+    background: rgba(0, 120, 212, 0.15);
+    border: 1px solid rgba(0, 120, 212, 0.4);
+    border-radius: 10px;
+    padding: 0.6em 1em;
+    font-size: 0.6em;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .arch-node .icon { font-size: 1.8em; display: block; margin-bottom: 0.2em; }
+  .arch-arrow { font-size: 1.2em; color: var(--azure-cyan); }
+
+  .cta-slide { text-align: center; }
+  .cta-slide img {
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(80, 230, 255, 0.2);
+    margin: 0.5em auto;
+    display: block;
+  }
+
+  .url-text {
+    font-size: 0.6em !important;
+    color: var(--azure-cyan) !important;
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: var(--bg-card);
+    padding: 0.4em 1em;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 0.5em;
+    border: 1px solid rgba(80, 230, 255, 0.2);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5em;
+    text-align: left;
+  }
+
+  .two-col ul li { font-size: 0.6em; }
+
+  .highlight-text {
+    color: var(--azure-cyan) !important;
+    font-weight: 600;
+  }
+
+  .reveal .slide-number {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.5em;
+    color: var(--text-muted);
+  }
+
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--azure-cyan), var(--azure-blue), var(--azure-purple));
+  }
+
+  .shield-icon {
+    font-size: 4em;
+    display: block;
+    margin-bottom: 0.2em;
+    filter: drop-shadow(0 0 20px rgba(80, 230, 255, 0.3));
+  }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8em;
+    margin-top: 0.8em;
+  }
+
+  .problem-card {
+    background: rgba(255, 60, 60, 0.05);
+    border: 1px solid rgba(255, 60, 60, 0.15);
+    border-radius: 10px;
+    padding: 0.8em;
+    text-align: center;
+  }
+
+  .problem-card .icon { font-size: 1.8em; display: block; margin-bottom: 0.2em; }
+  .problem-card p {
+    font-size: 0.55em !important;
+    margin: 0;
+    color: var(--text-muted) !important;
+  }
+
+  .stakeholder-row {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-top: 1em;
+    flex-wrap: wrap;
+  }
+
+  .stakeholder-badge {
+    background: var(--bg-card);
+    border: 1px solid rgba(119, 58, 220, 0.3);
+    border-radius: 20px;
+    padding: 0.4em 1em;
+    font-size: 0.55em;
+    color: var(--text-primary);
+  }
+
+  .reveal .progress { height: 3px; }
+  .reveal .progress span {
+    background: linear-gradient(90deg, var(--azure-cyan), var(--azure-blue), var(--azure-purple));
+  }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+  <!-- SLIDE 1: Title -->
+  <section>
+    <span class="shield-icon">🛡️</span>
+    <h1>GuardRails</h1>
+    <div class="gradient-bar"></div>
+    <p class="tagline">Know your AI blind spots before attackers do</p>
+    <p style="font-size:0.55em; color:var(--text-muted); margin-top:1.5em;">
+      GenAI Security &amp; Governance Checklist for Azure Enterprise
+    </p>
+    <aside class="notes">
+      Welcome everyone. GuardRails is an open-source, interactive checklist that helps Azure enterprise teams assess their GenAI security posture across 65 controls and 13 categories — before vulnerabilities become incidents.
+    </aside>
+  </section>
+
+  <!-- SLIDE 2: The Problem -->
+  <section>
+    <h2>The Problem</h2>
+    <p style="font-size:0.7em; color:var(--text-muted);">GenAI adoption is outpacing security readiness</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <span class="icon">🎯</span>
+        <p><strong style="color:#ff6b6b;">Prompt injection</strong> attacks bypass traditional perimeter defenses</p>
+      </div>
+      <div class="problem-card">
+        <span class="icon">🔓</span>
+        <p><strong style="color:#ff6b6b;">Data exfiltration</strong> through unguarded model endpoints</p>
+      </div>
+      <div class="problem-card">
+        <span class="icon">👤</span>
+        <p><strong style="color:#ff6b6b;">Shadow AI</strong> — teams deploying models without governance</p>
+      </div>
+      <div class="problem-card">
+        <span class="icon">📋</span>
+        <p><strong style="color:#ff6b6b;">No unified checklist</strong> mapping Azure services to AI risks</p>
+      </div>
+    </div>
+    <aside class="notes">
+      Organizations are racing to adopt GenAI, but security teams lack a structured way to assess risk. Prompt injection, data leaks, and ungoverned model deployments are real threats. Most enterprises don't have a single view of their AI security posture mapped to Azure-native controls.
+    </aside>
+  </section>
+
+  <!-- SLIDE 3: Overview / By the Numbers -->
+  <section>
+    <h2>The Solution: GuardRails</h2>
+    <p style="font-size:0.65em; color:var(--text-muted);">A structured, weighted assessment across the Azure AI stack</p>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="number">65</span>
+        <span class="label">Security Controls</span>
+      </div>
+      <div class="stat-card">
+        <span class="number">13</span>
+        <span class="label">Categories</span>
+      </div>
+      <div class="stat-card">
+        <span class="number">100%</span>
+        <span class="label">Azure-Native</span>
+      </div>
+    </div>
+    <div style="margin-top:1em;">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="number">⚖️</span>
+          <span class="label">Weighted Scoring</span>
+        </div>
+        <div class="stat-card">
+          <span class="number">📄</span>
+          <span class="label">PDF Export</span>
+        </div>
+        <div class="stat-card">
+          <span class="number">👥</span>
+          <span class="label">Stakeholder Mapping</span>
+        </div>
+      </div>
+    </div>
+    <aside class="notes">
+      GuardRails covers 65 security controls organized into 13 categories. Every control maps to Azure-native services. The tool provides weighted scoring so teams can prioritize, PDF export for executive reporting, and stakeholder mapping so you know who owns each area.
+    </aside>
+  </section>
+
+  <!-- SLIDE 4: 13 Categories at a Glance -->
+  <section>
+    <h2>13 Categories</h2>
+    <div class="category-grid">
+      <div class="cat-pill"><span class="icon">🛡️</span>Azure AI Content Safety</div>
+      <div class="cat-pill"><span class="icon">🔍</span>Microsoft Purview</div>
+      <div class="cat-pill"><span class="icon">🔐</span>Entra ID &amp; Access</div>
+      <div class="cat-pill"><span class="icon">🌐</span>Network Security</div>
+      <div class="cat-pill"><span class="icon">🚪</span>APIM AI Gateway</div>
+      <div class="cat-pill"><span class="icon">🏗️</span>Azure AI Foundry</div>
+      <div class="cat-pill"><span class="icon">💼</span>M365 Copilot</div>
+      <div class="cat-pill"><span class="icon">🛡️</span>Defender for Cloud</div>
+      <div class="cat-pill"><span class="icon">📊</span>Evaluations</div>
+      <div class="cat-pill"><span class="icon">🔴</span>Red Teaming</div>
+      <div class="cat-pill"><span class="icon">🔑</span>Key Management</div>
+      <div class="cat-pill"><span class="icon">📈</span>Monitoring &amp; Logging</div>
+      <div class="cat-pill"><span class="icon">⚖️</span>Responsible AI</div>
+    </div>
+    <aside class="notes">
+      These 13 categories span the full Azure AI stack — from content safety and identity, through network and gateway controls, to operational concerns like monitoring, red teaming, and responsible AI governance.
+    </aside>
+  </section>
+
+  <!-- SLIDE 5: Content Safety, Purview, Entra -->
+  <section>
+    <h2>Identity, Data &amp; Content</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="icon">🛡️</span>
+        <h4>Azure AI Content Safety</h4>
+        <p>Jailbreak detection, prompt shields, groundedness checks, custom blocklists for harmful content filtering</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔍</span>
+        <h4>Microsoft Purview</h4>
+        <p>Sensitivity labels on AI data, DLP policies for prompts &amp; responses, compliance auditing for AI workloads</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔐</span>
+        <h4>Entra ID &amp; Access</h4>
+        <p>Managed identity for model endpoints, RBAC for AI resources, Conditional Access for AI applications</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🌐</span>
+        <h4>Network Security</h4>
+        <p>Private endpoints for AI services, NSG rules, Azure Firewall inspection of AI traffic</p>
+      </div>
+    </div>
+    <aside class="notes">
+      The first layer of defense: Content Safety catches harmful prompts, Purview protects sensitive data, Entra secures identity and access, and network controls ensure AI services aren't exposed to the public internet.
+    </aside>
+  </section>
+
+  <!-- SLIDE 6: APIM, AI Foundry, M365 Copilot -->
+  <section>
+    <h2>Platform &amp; Gateway Controls</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="icon">🚪</span>
+        <h4>APIM AI Gateway</h4>
+        <p>Rate limiting, token quotas, semantic caching, request/response logging, load balancing across AI backends</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🏗️</span>
+        <h4>Azure AI Foundry</h4>
+        <p>Model catalog governance, deployment guardrails, prompt flow security, managed compute isolation</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">💼</span>
+        <h4>M365 Copilot</h4>
+        <p>Oversharing prevention, SharePoint permissions audit, sensitivity-aware Copilot responses, plugin governance</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🛡️</span>
+        <h4>Defender for Cloud</h4>
+        <p>AI workload threat protection, anomaly detection on model endpoints, security posture for AI resources</p>
+      </div>
+    </div>
+    <aside class="notes">
+      The platform layer: APIM acts as your AI gateway controlling all traffic. AI Foundry manages model governance. M365 Copilot has unique oversharing risks. Defender provides runtime threat detection across your AI workloads.
+    </aside>
+  </section>
+
+  <!-- SLIDE 7: Red Teaming, Evals, Responsible AI -->
+  <section>
+    <h2>Testing &amp; Governance</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="icon">🔴</span>
+        <h4>Red Teaming</h4>
+        <p>Automated adversarial probing, jailbreak testing, prompt injection fuzzing, multi-turn attack simulation</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📊</span>
+        <h4>Evaluations</h4>
+        <p>Groundedness metrics, coherence scoring, relevance testing, safety evaluation before production deployment</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔑</span>
+        <h4>Key Management</h4>
+        <p>Key Vault integration, managed identity over API keys, rotation policies, secret expiration alerts</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⚖️</span>
+        <h4>Responsible AI</h4>
+        <p>Transparency notes, fairness assessments, model cards, human oversight requirements, bias detection</p>
+      </div>
+    </div>
+    <aside class="notes">
+      The validation layer: Red teaming tests your defenses proactively. Evaluations ensure model quality before shipping. Key management eliminates secret sprawl. Responsible AI ensures compliance with ethical guidelines and regulations.
+    </aside>
+  </section>
+
+  <!-- SLIDE 8: Weighted Scoring Deep Dive -->
+  <section>
+    <h2>Weighted Scoring</h2>
+    <p style="font-size:0.65em; color:var(--text-muted);">Not all controls are equal — prioritize what matters most</p>
+    <div class="arch-box">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:0.8em;">How it works</h3>
+          <ul>
+            <li>Each control has a <span class="highlight-text">weight</span> based on risk impact</li>
+            <li>Status: ✅ Implemented · ⚠️ Partial · ❌ Not Started</li>
+            <li>Overall score calculated as <span class="highlight-text">weighted percentage</span></li>
+            <li>Category-level and aggregate scores</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:0.8em;">What you get</h3>
+          <ul>
+            <li>Visual <span class="highlight-text">progress dashboard</span> with radar charts</li>
+            <li>Priority-ordered remediation list</li>
+            <li><span class="highlight-text">PDF report</span> for executive review</li>
+            <li>Reference links to Azure docs for each control</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="stakeholder-row">
+      <span class="stakeholder-badge">🔒 CISO</span>
+      <span class="stakeholder-badge">☁️ Cloud Architect</span>
+      <span class="stakeholder-badge">👩‍💻 AI/ML Engineer</span>
+      <span class="stakeholder-badge">📋 Compliance Officer</span>
+      <span class="stakeholder-badge">🛡️ Security Engineer</span>
+    </div>
+    <aside class="notes">
+      The weighted scoring system ensures critical controls like identity and content safety are weighted higher than nice-to-haves. Each stakeholder gets a clear view of their domain. The PDF export lets CISOs include this in board-level reporting.
+    </aside>
+  </section>
+
+  <!-- SLIDE 9: Architecture -->
+  <section>
+    <h2>Architecture</h2>
+    <p style="font-size:0.65em; color:var(--text-muted);">Zero backend. Zero data collection. Runs entirely in the browser.</p>
+    <div class="arch-box">
+      <div class="arch-flow">
+        <div class="arch-node">
+          <span class="icon">👤</span>
+          User / Browser
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node">
+          <span class="icon">⚡</span>
+          Azure Static<br>Web Apps
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node">
+          <span class="icon">📱</span>
+          Single-Page App<br>(HTML/CSS/JS)
+        </div>
+      </div>
+      <div class="arch-flow" style="margin-top:0.8em;">
+        <div class="arch-node">
+          <span class="icon">💾</span>
+          localStorage<br>Persistence
+        </div>
+        <span class="arch-arrow" style="font-size:1em;">—</span>
+        <div class="arch-node">
+          <span class="icon">📄</span>
+          Client-Side<br>PDF Generation
+        </div>
+        <span class="arch-arrow" style="font-size:1em;">—</span>
+        <div class="arch-node">
+          <span class="icon">🔄</span>
+          GitHub Actions<br>CI/CD
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.5em; color:var(--text-muted); margin-top:0.5em;">
+      No server-side processing · No telemetry · Assessment data never leaves your browser
+    </p>
+    <aside class="notes">
+      The architecture is intentionally simple and privacy-first. It's a static single-page app hosted on Azure Static Web Apps. All assessment data lives in the browser's localStorage — nothing is sent to a server. PDF generation happens client-side. CI/CD is handled by GitHub Actions.
+    </aside>
+  </section>
+
+  <!-- SLIDE 10: Open Source & Getting Started -->
+  <section>
+    <h2>Open Source</h2>
+    <p style="font-size:0.65em; color:var(--text-muted);">Built in the open. Fork it. Extend it. Make it yours.</p>
+    <div class="arch-box">
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:0.8em;">Get Started</h3>
+          <ul>
+            <li>Visit the <span class="highlight-text">live app</span> — no install needed</li>
+            <li>Walk through 65 controls with your team</li>
+            <li>Export a <span class="highlight-text">PDF report</span> for leadership</li>
+            <li>Bookmark &amp; return — progress is saved</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:0.8em;">Contribute</h3>
+          <ul>
+            <li>⭐ Star the repo on GitHub</li>
+            <li>🐛 File issues for missing controls</li>
+            <li>🔧 Submit PRs for new categories</li>
+            <li>📢 Share with your security community</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:0.8em;">
+      <span class="url-text">github.com/abKrazy/genai-security-checklist</span>
+    </div>
+    <aside class="notes">
+      GuardRails is fully open source under MIT license. You can use the live app immediately — no signup, no install. Your team can complete the assessment in a single session and export a PDF. Contributions are welcome: new controls, categories, and improvements.
+    </aside>
+  </section>
+
+  <!-- SLIDE 11: Call to Action + QR Code -->
+  <section class="cta-slide">
+    <h2>Try It Now</h2>
+    <div class="gradient-bar"></div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblack-island-00b97a90f.6.azurestaticapps.net&color=50E6FF&bgcolor=0d1117"
+         alt="QR Code — GuardRails Live App"
+         width="250" height="250">
+    <p class="url-text" style="margin-top:0.6em;">https://black-island-00b97a90f.6.azurestaticapps.net</p>
+    <p style="font-size:0.6em; color:var(--text-muted); margin-top:0.8em;">
+      Scan the QR code or visit the URL to start your GenAI security assessment
+    </p>
+    <div style="margin-top:0.8em;">
+      <span class="stakeholder-badge">🛡️ 65 Controls</span>
+      <span class="stakeholder-badge">📊 Weighted Scoring</span>
+      <span class="stakeholder-badge">📄 PDF Export</span>
+      <span class="stakeholder-badge">🔒 Privacy-First</span>
+    </div>
+    <aside class="notes">
+      Scan the QR code to go straight to the live app. No accounts, no install. Start assessing your GenAI security posture today. Share this with your CISO, cloud architects, and AI engineering teams. Thank you!
+    </aside>
+  </section>
+
+  <!-- SLIDE 12: Thank You -->
+  <section>
+    <span class="shield-icon">🛡️</span>
+    <h1>Thank You</h1>
+    <div class="gradient-bar"></div>
+    <p class="tagline">Secure your AI. Protect your enterprise.</p>
+    <div style="margin-top:1.5em;">
+      <span class="url-text">github.com/abKrazy/genai-security-checklist</span>
+    </div>
+    <aside class="notes">
+      Thank you for your time. Please star the repo, try the tool, and share it with your teams. Happy to take questions.
+    </aside>
+  </section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    width: 1280,
+    height: 720,
+    margin: 0.08,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    center: true,
+    plugins: [RevealNotes, RevealHighlight]
+  });
+</script>
+</body>
+</html>

@@ -460,19 +460,29 @@ function downloadPDF(){
     pagebreak:{mode:['avoid-all','css','legacy']}
   };
   const wrapper=document.createElement('div');
-  wrapper.style.cssText='background:#0d1117;color:#e6edf3;font-family:Segoe UI,system-ui,sans-serif;padding:0;';
-  // Compact PDF header — no clone, avoids blank first page
+  wrapper.style.cssText='background:#0d1117;color:#e6edf3;font-family:Segoe UI,system-ui,sans-serif;padding:16px;';
+  // Compact PDF header
   const pdfHeader=document.createElement('div');
-  pdfHeader.style.cssText='padding:16px 0 12px;border-bottom:2px solid #30363d;margin-bottom:16px;';
+  pdfHeader.style.cssText='padding:0 0 12px;border-bottom:2px solid #30363d;margin-bottom:16px;';
   pdfHeader.innerHTML=`<div style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#50E6FF,#0078D4,#773ADC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">GuardRails</div>`
     +`<div style="font-size:11px;color:#8b949e;margin-top:2px;">GenAI Security &amp; Governance Checklist for Azure Enterprise</div>`
     +`<div style="margin-top:8px;font-size:13px;color:#e6edf3;">Score: <strong>${Math.round(score)}/100</strong> &mdash; ${checkedCount} of ${total} controls implemented</div>`;
   wrapper.appendChild(pdfHeader);
   const mainClone=el.cloneNode(true);
+  // Force all controls visible in clone (CSS .open doesn't apply off-DOM)
+  mainClone.querySelectorAll('.controls-list').forEach(cl=>cl.style.display='block');
   wrapper.appendChild(mainClone);
   // Remove interactive elements from clone
   wrapper.querySelectorAll('.btn,.cat-btn,.search-section').forEach(b=>b.remove());
-  html2pdf().set(opt).from(wrapper).save();
+  // Append off-screen so html2canvas can compute styles
+  wrapper.style.position='fixed';
+  wrapper.style.left='-9999px';
+  wrapper.style.top='0';
+  wrapper.style.width='800px';
+  document.body.appendChild(wrapper);
+  html2pdf().set(opt).from(wrapper).save().then(()=>{
+    document.body.removeChild(wrapper);
+  });
 }
 
 function resetAll(){
