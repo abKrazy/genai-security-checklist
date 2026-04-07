@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GuardRails — GenAI Security &amp; Governance Checklist</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -132,10 +132,28 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 
 /* Print / PDF */
 @media print{
-  .header{position:relative}
-  .btn,.search-section{display:none!important}
-  .category.open .controls-list,.controls-list{display:block!important}
-  .control-item{break-inside:avoid}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  body{background:#fff!important;color:#1a1a1a!important;font-size:10pt!important}
+  .header{position:relative!important;background:#fff!important;border-bottom:2px solid #0078d4!important;padding:12px 16px!important}
+  .header .logo h1{-webkit-text-fill-color:#0078d4!important;color:#0078d4!important;font-size:18pt!important}
+  .header .tagline{color:#555!important}
+  .score-section{display:none!important}
+  .actions,.search-section,.footer,.cat-btn,.chevron,.filter-pills,.stats-bar{display:none!important}
+  .main{max-width:100%!important;padding:0 16px!important}
+  .category{background:#fff!important;border:1px solid #ccc!important;margin:8px 0!important;page-break-inside:avoid!important}
+  .category-header{background:#f5f5f5!important;color:#1a1a1a!important;padding:6px 12px!important}
+  .category-icon{font-size:12pt!important}
+  .category-name{color:#1a1a1a!important;font-size:11pt!important}
+  .category-count{color:#555!important}
+  .category-bar{display:none!important}
+  .controls-list{display:block!important;border-top:1px solid #ddd!important}
+  .control-item{break-inside:avoid!important;padding:6px 12px!important;border-bottom:1px solid #eee!important;color:#1a1a1a!important;background:#fff!important}
+  .control-name{color:#1a1a1a!important;font-size:10pt!important}
+  .control-desc{color:#555!important;font-size:9pt!important}
+  .control-meta span{color:#333!important;background:#f0f0f0!important;border:1px solid #ccc!important;font-size:8pt!important}
+  a{color:#0078d4!important}
+  .priority-badge{font-size:8pt!important}
+  input[type=checkbox]{-webkit-appearance:auto!important;appearance:auto!important;width:14px!important;height:14px!important}
 }
 
 /* Animations */
@@ -280,10 +298,7 @@ const CATEGORY_ICONS={"Azure AI Content Safety":"🛡️","Microsoft Purview":"�
 const WEIGHT={High:3,Medium:2,Low:1};
 let checkedState={};
 
-// Load state from localStorage
-try{const s=localStorage.getItem('guardrails-state');if(s)checkedState=JSON.parse(s);}catch(e){}
-
-function saveState(){try{localStorage.setItem('guardrails-state',JSON.stringify(checkedState));}catch(e){}}
+function saveState(){/* no-op: fresh state on every load */}
 
 function getCategories(){
   const cats=new Map();
@@ -447,37 +462,9 @@ function render(filter='all',search=''){
 }
 
 function downloadPDF(){
-  // Open all categories so all controls are visible
+  // Open all categories so all controls are visible for print
   document.querySelectorAll('.category').forEach(c=>c.classList.add('open'));
-  const {score,checkedCount,total}=calcScore();
-  // Inject a temporary PDF-only header above main
-  const container=document.getElementById('checklistContainer');
-  const pdfBanner=document.createElement('div');
-  pdfBanner.id='pdfBanner';
-  pdfBanner.style.cssText='background:#0d1117;color:#e6edf3;font-family:Segoe UI,system-ui,sans-serif;padding:20px 16px 16px;';
-  pdfBanner.innerHTML=`<div style="font-size:24px;font-weight:700;color:#50E6FF;">GuardRails</div>`
-    +`<div style="font-size:12px;color:#8b949e;margin-top:4px;">GenAI Security &amp; Governance Checklist for Azure Enterprise</div>`
-    +`<div style="margin-top:10px;font-size:14px;color:#e6edf3;">Score: <strong>${Math.round(score)}/100</strong> &mdash; ${checkedCount} of ${total} controls implemented</div>`
-    +`<div style="border-bottom:2px solid #30363d;margin-top:12px;"></div>`;
-  container.parentNode.insertBefore(pdfBanner,container);
-  // Hide the header, search, footer, and buttons for PDF capture
-  const hide=[document.querySelector('header'),document.querySelector('.search-section'),document.querySelector('.footer')];
-  hide.forEach(el=>{if(el)el.style.display='none'});
-  document.querySelectorAll('.cat-btn').forEach(b=>b.style.display='none');
-  const opt={
-    margin:[8,8,8,8],
-    filename:'GuardRails-GenAI-Security-Checklist.pdf',
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true,backgroundColor:'#0d1117',scrollY:0,windowWidth:900},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['avoid-all','css','legacy']}
-  };
-  html2pdf().set(opt).from(document.body).save().then(()=>{
-    // Restore everything
-    pdfBanner.remove();
-    hide.forEach(el=>{if(el)el.style.display=''});
-    document.querySelectorAll('.cat-btn').forEach(b=>b.style.display='');
-  });
+  window.print();
 }
 
 function resetAll(){
