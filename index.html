@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuardRails — GenAI Security &amp; Governance Checklist</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--accent2:#1f6feb;
+  --azure:#0078d4;--azure-light:#50e6ff;--purple:#773adc;
+  --high:#f85149;--medium:#d29922;--low:#3fb950;
+  --radius:8px;--transition:0.2s ease;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid var(--border);padding:0.8rem 1.5rem;backdrop-filter:blur(12px)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:0.6rem}
+.logo svg{width:32px;height:32px}
+.logo h1{font-size:1.4rem;background:linear-gradient(135deg,var(--azure-light),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.logo .tagline{font-size:0.75rem;color:var(--text-muted);display:block;margin-top:-2px}
+
+/* Score */
+.score-section{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.score-circle{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;background:conic-gradient(var(--high) 0%,var(--high) var(--score-pct,0%),var(--surface2) var(--score-pct,0%));position:relative}
+.score-circle::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--bg)}
+.score-number{position:relative;z-index:1}
+.score-label{font-size:0.7rem;color:var(--text-muted);text-align:center}
+.score-bar{width:200px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width 0.4s ease,background 0.4s ease;width:0%}
+.score-details{font-size:0.75rem;color:var(--text-muted)}
+
+/* Actions */
+.actions{display:flex;gap:0.5rem;flex-wrap:wrap}
+.btn{padding:0.5rem 1rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:0.8rem;transition:var(--transition);display:flex;align-items:center;gap:0.4rem;text-decoration:none}
+.btn:hover{background:var(--surface2);border-color:var(--accent)}
+.btn-primary{background:var(--azure);border-color:var(--azure);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+
+/* Search */
+.search-section{max-width:1400px;margin:1rem auto;padding:0 1.5rem}
+.search-bar{display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center}
+.search-input{flex:1;min-width:200px;padding:0.6rem 1rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.9rem;outline:none;transition:var(--transition)}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,0.15)}
+.search-input::placeholder{color:var(--text-muted)}
+.filter-pills{display:flex;gap:0.3rem;flex-wrap:wrap}
+.filter-pill{padding:0.3rem 0.7rem;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:0.75rem;transition:var(--transition)}
+.filter-pill:hover,.filter-pill.active{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,0.1)}
+.stats-bar{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted)}
+
+/* Main */
+.main{max-width:1400px;margin:0 auto;padding:0 1.5rem 3rem}
+
+/* Category */
+.category{margin-top:1.2rem;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.category-header{padding:0.8rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--surface);transition:var(--transition);gap:0.5rem;user-select:none}
+.category-header:hover{background:var(--surface2)}
+.category-title{display:flex;align-items:center;gap:0.6rem;font-weight:600;font-size:1rem}
+.category-icon{font-size:1.2rem}
+.category-meta{display:flex;align-items:center;gap:0.8rem}
+.category-progress{font-size:0.75rem;color:var(--text-muted)}
+.category-bar{width:80px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.category-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s ease}
+.chevron{font-size:0.8rem;transition:transform 0.2s ease;color:var(--text-muted)}
+.category.open .chevron{transform:rotate(180deg)}
+.category-actions{display:flex;gap:0.3rem}
+.cat-btn{padding:0.2rem 0.5rem;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.65rem;transition:var(--transition)}
+.cat-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Controls */
+.controls-list{display:none;border-top:1px solid var(--border)}
+.category.open .controls-list{display:block}
+.control-item{display:grid;grid-template-columns:auto 1fr;gap:0.8rem;padding:0.7rem 1rem;border-bottom:1px solid var(--border);transition:var(--transition);align-items:start}
+.control-item:last-child{border-bottom:none}
+.control-item:hover{background:rgba(88,166,255,0.03)}
+.control-item.checked{background:rgba(63,185,80,0.05)}
+
+/* Checkbox */
+.check{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0;margin-top:2px}
+.check:hover{border-color:var(--accent)}
+.check.checked{background:var(--low);border-color:var(--low)}
+.check.checked::after{content:'✓';color:#fff;font-size:0.75rem;font-weight:700}
+.check:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Control details */
+.control-details{display:flex;flex-direction:column;gap:0.3rem;min-width:0}
+.control-top{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.control-name{font-weight:600;font-size:0.9rem}
+.control-item.checked .control-name{text-decoration:line-through;opacity:0.6}
+.control-desc{font-size:0.8rem;color:var(--text-muted);line-height:1.4}
+.control-bottom{display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-top:0.2rem}
+
+/* Badges */
+.badge{padding:0.15rem 0.5rem;border-radius:12px;font-size:0.65rem;font-weight:600;white-space:nowrap}
+.badge-product{background:rgba(88,166,255,0.15);color:var(--accent);border:1px solid rgba(88,166,255,0.25)}
+.badge-high{background:rgba(248,81,73,0.15);color:var(--high);border:1px solid rgba(248,81,73,0.25)}
+.badge-medium{background:rgba(210,153,34,0.15);color:var(--medium);border:1px solid rgba(210,153,34,0.25)}
+.badge-low{background:rgba(63,185,80,0.15);color:var(--low);border:1px solid rgba(63,185,80,0.25)}
+.badge-stakeholder{background:rgba(119,58,220,0.12);color:#b87dff;border:1px solid rgba(119,58,220,0.2);font-weight:400}
+.ref-link{font-size:0.7rem;color:var(--accent);text-decoration:none;transition:var(--transition);white-space:nowrap;display:inline-flex;align-items:center;gap:0.2rem}
+.ref-link:hover{text-decoration:underline;color:var(--azure-light)}
+.ref-link svg{width:10px;height:10px}
+
+/* Footer */
+.footer{text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.75rem;border-top:1px solid var(--border);margin-top:2rem}
+
+/* Responsive */
+@media(max-width:768px){
+  .header-inner{flex-direction:column;align-items:flex-start}
+  .score-section{width:100%;justify-content:space-between}
+  .score-bar{width:120px}
+  .actions{width:100%}
+  .control-item{grid-template-columns:auto 1fr}
+  .control-top{flex-direction:column;align-items:flex-start}
+  .category-meta{flex-wrap:wrap}
+  .search-bar{flex-direction:column}
+  .search-input{min-width:100%}
+}
+@media(max-width:480px){
+  html{font-size:14px}
+  .header{padding:0.6rem 1rem}
+  .main{padding:0 1rem 2rem}
+  .search-section{padding:0 1rem}
+  .score-circle{width:55px;height:55px;font-size:1rem}
+  .control-item{padding:0.6rem 0.7rem}
+}
+
+/* Print / PDF */
+@media print{
+  .header{position:relative}
+  .btn,.search-section{display:none!important}
+  .category.open .controls-list,.controls-list{display:block!important}
+  .control-item{break-inside:avoid}
+}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.category{animation:fadeIn 0.3s ease forwards}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="url(#g)"/><path d="M8 16l4 4 8-10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#50e6ff"/><stop offset="1" stop-color="#773adc"/></linearGradient></defs></svg>
+      <div>
+        <h1>GuardRails</h1>
+        <span class="tagline">Enterprise GenAI Security &amp; Governance Checklist</span>
+      </div>
+    </div>
+    <div class="score-section">
+      <div class="score-circle" id="scoreCircle" style="--score-pct:0%">
+        <span class="score-number" id="scoreNumber">0</span>
+      </div>
+      <div>
+        <div class="score-bar"><div class="score-bar-fill" id="scoreBar"></div></div>
+        <div class="score-label">AI Security Posture Score</div>
+        <div class="score-details" id="scoreDetails">0 of 63 controls implemented</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="downloadPDF()" aria-label="Download checklist as PDF">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12zm-5 2h10v1H3v-1z"/></svg>
+        Download PDF
+      </button>
+      <button class="btn" onclick="resetAll()" aria-label="Reset all checkboxes">Reset All</button>
+    </div>
+  </div>
+</header>
+
+<section class="search-section">
+  <div class="search-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search controls, products, categories..." aria-label="Search controls">
+    <div class="filter-pills" id="filterPills">
+      <button class="filter-pill active" data-filter="all">All</button>
+      <button class="filter-pill" data-filter="High">High</button>
+      <button class="filter-pill" data-filter="Medium">Medium</button>
+      <button class="filter-pill" data-filter="Low">Low</button>
+    </div>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+</section>
+
+<main class="main" id="checklistContainer"></main>
+
+<footer class="footer">
+  <p>GuardRails — Know your AI blind spots before attackers do.</p>
+  <p style="margin-top:0.3rem">Built with Squad AI Agent Teams + GitHub Copilot Fleet &bull; &copy; 2026</p>
+</footer>
+
+<script>
+const CHECKLIST_DATA=[
+  {"category":"Azure AI Content Safety","control":"Prompt Shields — Direct Injection Detection","description":"Detects and blocks direct prompt injection attacks attempting to modify AI system instructions or override safety guardrails","product":"Azure AI Content Safety","priority":"High","stakeholders":"Security Engineers, AI Engineers, DevOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/jailbreak-detection"},
+  {"category":"Azure AI Content Safety","control":"Prompt Shields — Indirect Injection Detection","description":"Identifies indirect prompt injections embedded in user-supplied documents or data used as context for AI inference","product":"Azure AI Content Safety","priority":"High","stakeholders":"Security Engineers, AI Engineers, Data Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/jailbreak-detection"},
+  {"category":"Azure AI Content Safety","control":"Groundedness Detection","description":"Validates that AI responses are grounded in provided source documents, preventing hallucinated or fabricated information","product":"Azure AI Content Safety","priority":"High","stakeholders":"AI Engineers, Data Scientists, Quality Assurance","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/quickstart-groundedness"},
+  {"category":"Azure AI Content Safety","control":"Protected Material Detection — Text","description":"Identifies and blocks generation of copyrighted, trademarked, or legally protected text content by AI models","product":"Azure AI Content Safety","priority":"High","stakeholders":"Legal, Compliance, AI Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/protected-material"},
+  {"category":"Azure AI Content Safety","control":"Protected Material Detection — Code","description":"Detects attempts to generate code that replicates protected software libraries or licensed intellectual property","product":"Azure AI Content Safety","priority":"Medium","stakeholders":"Security Engineers, Development Team, Legal","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/protected-material"},
+  {"category":"Azure AI Content Safety","control":"Custom Content Categories","description":"Defines organization-specific content categories for moderation beyond standard harm taxonomy (e.g., domain-specific regulations)","product":"Azure AI Content Safety","priority":"Medium","stakeholders":"Compliance, AI Engineers, Business Stakeholders","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/how-to/custom-categories"},
+  {"category":"Azure AI Content Safety","control":"Image Moderation for AI-Generated Content","description":"Detects harmful, inappropriate, or policy-violating content in images generated or processed by AI models","product":"Azure AI Content Safety","priority":"Medium","stakeholders":"Content Moderation, AI Engineers, Legal","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/quickstart-image"},
+  {"category":"Azure AI Content Safety","control":"Text Moderation with Severity Levels","description":"Classifies harmful content in AI-generated or user-provided text with severity ratings for risk-based response","product":"Azure AI Content Safety","priority":"Medium","stakeholders":"Security Engineers, AI Engineers, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/quickstart-text"},
+  {"category":"Azure AI Content Safety","control":"PII & PHI Detection and Redaction","description":"Detects and redacts personally identifiable information (PII) and protected health information (PHI) in AI model inputs and outputs to prevent data leakage","product":"Azure AI Content Safety","priority":"High","stakeholders":"Security, Compliance, Data Privacy, Healthcare IT","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/content-filtering"},
+
+  {"category":"Microsoft Purview","control":"AI Hub — Activity Visibility & Audit Logs","description":"Centrally logs and audits all AI interactions, model access, and data processing for governance and forensic analysis","product":"Microsoft Purview","priority":"High","stakeholders":"Compliance, Security, AI Operations","referenceUrl":"https://learn.microsoft.com/en-us/purview/ai-microsoft-purview"},
+  {"category":"Microsoft Purview","control":"Shadow AI Detection & Governance","description":"Identifies unauthorized AI service usage (e.g., personal ChatGPT accounts) and enforces approved model policies","product":"Microsoft Purview","priority":"High","stakeholders":"Security, IT Governance, Risk Management","referenceUrl":"https://learn.microsoft.com/en-us/purview/ai-microsoft-purview-considerations"},
+  {"category":"Microsoft Purview","control":"Sensitivity Labels on AI Interactions","description":"Automatically applies sensitivity classifications to AI-generated outputs and enforces handling policies","product":"Microsoft Purview","priority":"High","stakeholders":"Compliance, Knowledge Workers, AI Teams","referenceUrl":"https://learn.microsoft.com/en-us/purview/sensitivity-labels"},
+  {"category":"Microsoft Purview","control":"Data Loss Prevention (DLP) for AI Applications","description":"Prevents confidential or sensitive data from being sent to AI endpoints and enforces data residency policies","product":"Microsoft Purview","priority":"High","stakeholders":"Security, Compliance, Data Governance","referenceUrl":"https://learn.microsoft.com/en-us/purview/dlp-learn-about-dlp"},
+  {"category":"Microsoft Purview","control":"Data Classification for AI Training & Fine-Tuning","description":"Enforces classification and lineage tracking for datasets used in model training to prevent unauthorized data use","product":"Microsoft Purview","priority":"Medium","stakeholders":"Data Governance, AI Engineers, Compliance","referenceUrl":"https://learn.microsoft.com/en-us/purview/data-classification-overview"},
+  {"category":"Microsoft Purview","control":"Insider Risk Detection for AI Usage Anomalies","description":"Monitors for suspicious AI usage patterns (e.g., bulk data exfiltration via prompts, unauthorized model access)","product":"Microsoft Purview","priority":"Medium","stakeholders":"Security, Risk Management, HR","referenceUrl":"https://learn.microsoft.com/en-us/purview/insider-risk-management"},
+
+  {"category":"Microsoft Entra ID","control":"Agent Identity for Agentic AI Apps","description":"Assigns unique identity to autonomous AI agents with scoped permissions, enabling audit trail and access revocation","product":"Microsoft Entra ID","priority":"High","stakeholders":"Security, AI Engineers, Identity Architects","referenceUrl":"https://learn.microsoft.com/en-us/entra/agent-id/what-is-microsoft-entra-agent-id"},
+  {"category":"Microsoft Entra ID","control":"Workload Identity Federation for AI Services","description":"Replaces API keys with federated identity credentials for Azure OpenAI and AI Foundry services","product":"Microsoft Entra ID","priority":"High","stakeholders":"Security, AI Engineers, DevOps","referenceUrl":"https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation"},
+  {"category":"Microsoft Entra ID","control":"Conditional Access Policies for AI Endpoints","description":"Enforces device compliance, location-based access, and risk-based authentication for AI service access","product":"Microsoft Entra ID","priority":"High","stakeholders":"Security, Identity Architects, Operations","referenceUrl":"https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview"},
+  {"category":"Microsoft Entra ID","control":"Managed Identity for Azure AI Services","description":"Enables system-assigned or user-assigned managed identities for AI workloads without storing credentials in code","product":"Microsoft Entra ID","priority":"High","stakeholders":"Security, Cloud Architects, AI Engineers","referenceUrl":"https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview"},
+  {"category":"Microsoft Entra ID","control":"Least-Privilege RBAC for AI Resources","description":"Applies role-based access control with minimal permissions for AI model deployment, inference, and monitoring","product":"Microsoft Entra ID","priority":"High","stakeholders":"Security, Identity Architects, Resource Owners","referenceUrl":"https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices"},
+
+  {"category":"Network Security","control":"Private Endpoints for Azure OpenAI & AI Services","description":"Restricts AI service access to private network connections, preventing exposure via public internet","product":"Azure Private Link","priority":"High","stakeholders":"Network Architects, Security, Cloud Infrastructure","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/cognitive-services-virtual-networks"},
+  {"category":"Network Security","control":"VNet Integration for AI Workloads","description":"Deploys AI compute resources within Azure Virtual Networks with network policies for lateral movement prevention","product":"Azure Virtual Network","priority":"Medium","stakeholders":"Network Architects, Cloud Infrastructure, Security","referenceUrl":"https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview"},
+  {"category":"Network Security","control":"Network Isolation for AI Model Endpoints","description":"Segments AI inference endpoints using NSGs and firewalls to restrict access to authorized applications only","product":"Azure Network Security Groups","priority":"Medium","stakeholders":"Network Security, DevOps, Security","referenceUrl":"https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"},
+  {"category":"Network Security","control":"Entra Internet Access — Prompt Injection Protection","description":"Intercepts and validates AI prompts at network perimeter to block injection payloads before they reach endpoints","product":"Microsoft Entra Internet Access","priority":"High","stakeholders":"Network Security, Security Architects, Operations","referenceUrl":"https://learn.microsoft.com/en-us/entra/global-secure-access/concept-internet-access"},
+  {"category":"Network Security","control":"Token Theft Protection for AI Applications","description":"Implements device binding and real-time threat detection to prevent stolen tokens from authorizing AI API calls","product":"Microsoft Entra Internet Access","priority":"High","stakeholders":"Security, DevSecOps, Application Teams","referenceUrl":"https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection"},
+
+  {"category":"AI Gateway (Azure API Management)","control":"Token Rate Limiting for LLM APIs","description":"Implements token-based rate limiting to prevent model exhaustion and manage API consumption per consumer","product":"Azure API Management","priority":"High","stakeholders":"API Architects, AI Engineers, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/azure-openai-token-limit-policy"},
+  {"category":"AI Gateway (Azure API Management)","control":"Semantic Caching for AI Responses","description":"Caches AI-generated responses based on semantic similarity to reduce token consumption and improve cost efficiency","product":"Azure API Management","priority":"Medium","stakeholders":"API Architects, AI Engineers, FinOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/azure-openai-semantic-cache-lookup-policy"},
+  {"category":"AI Gateway (Azure API Management)","control":"Content Filtering Policies for Prompts & Responses","description":"Enforces inbound/outbound content policies to block malicious prompts and sanitize AI responses before delivery","product":"Azure API Management","priority":"High","stakeholders":"Security, API Architects, AI Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/azure-openai-policy-reference"},
+  {"category":"AI Gateway (Azure API Management)","control":"Circuit Breaker for AI Backend Failures","description":"Automatically fails over or sheds load when AI model endpoints experience degradation or unexpected behavior","product":"Azure API Management","priority":"Medium","stakeholders":"API Architects, Operations, Reliability Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/backends?tabs=bicep"},
+  {"category":"AI Gateway (Azure API Management)","control":"Prompt & Completion Logging for Audit Trail","description":"Captures all prompts sent and responses returned for compliance auditing and incident investigation","product":"Azure API Management","priority":"High","stakeholders":"Compliance, Security, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/diagnostic-logs-reference"},
+  {"category":"AI Gateway (Azure API Management)","control":"Cost Management & Chargeback per AI Consumer","description":"Tracks token usage, API calls, and model costs per application/department for budget allocation and cost control","product":"Azure API Management","priority":"Medium","stakeholders":"FinOps, Finance, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/azure-openai-emit-token-metric-policy"},
+  {"category":"AI Gateway (Azure API Management)","control":"Load Balancing Across AI Model Deployments","description":"Distributes requests across multiple AI model replicas or regions to prevent single-point failures","product":"Azure API Management","priority":"Medium","stakeholders":"Operations, API Architects, Reliability Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/backends?tabs=bicep"},
+  {"category":"AI Gateway (Azure API Management)","control":"Token Metrics Emission for Monitoring","description":"Exports token consumption metrics to Azure Monitor for real-time usage tracking and anomaly detection","product":"Azure API Management","priority":"Medium","stakeholders":"Operations, Observability Engineers, FinOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/api-management/azure-openai-emit-token-metric-policy"},
+
+  {"category":"Azure AI Foundry","control":"Model Catalog Governance — Approved Models List","description":"Central registry of pre-approved AI models with compliance, licensing, and performance metadata for enforcement","product":"Azure AI Foundry","priority":"High","stakeholders":"Governance, AI Engineers, Legal","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/model-catalog-overview"},
+  {"category":"Azure AI Foundry","control":"Endpoint Access Control & Authentication","description":"Enforces API key, managed identity, and mutual TLS authentication for programmatic access to deployed AI models","product":"Azure AI Foundry","priority":"High","stakeholders":"Security, AI Engineers, DevOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/rbac-ai-foundry"},
+  {"category":"Azure AI Foundry","control":"Model Deployment Policies & Regional Restrictions","description":"Enforces data residency, compliance, and cost policies based on deployment geography and model type","product":"Azure AI Foundry","priority":"High","stakeholders":"Compliance, AI Engineers, Cloud Architects","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/deploy-models-openai"},
+  {"category":"Azure AI Foundry","control":"Responsible AI Dashboard & Content Filters","description":"Real-time dashboard showing model behavior, harm indicators, and automated content filter effectiveness","product":"Azure AI Foundry","priority":"Medium","stakeholders":"AI Engineers, Data Scientists, Governance","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/content-filtering"},
+  {"category":"Azure AI Foundry","control":"Model Evaluation Before Production Deployment","description":"Automated safety testing and adversarial evaluation to identify model vulnerabilities before production release","product":"Azure AI Foundry","priority":"High","stakeholders":"Security, AI Engineers, QA","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/evaluate-generative-ai-app"},
+  {"category":"Azure AI Foundry","control":"Data Privacy & Security for AI Foundry","description":"Governance controls for data encryption, access patterns, and retention policies for model inputs and outputs","product":"Azure AI Foundry","priority":"High","stakeholders":"Security, Compliance, Data Governance","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/configure-managed-network"},
+
+  {"category":"Microsoft 365 Copilot & Agents","control":"Copilot Admin Controls & Policies","description":"Central policy enforcement for Copilot features, model selection, plugin access, and user-level permissions","product":"Microsoft 365 Copilot","priority":"High","stakeholders":"IT Administration, Governance, Security","referenceUrl":"https://learn.microsoft.com/en-us/copilot/microsoft-365/microsoft-365-copilot-setup"},
+  {"category":"Microsoft 365 Copilot & Agents","control":"DLP for Copilot Interactions","description":"Blocks confidential or sensitive data from being sent as prompts to Copilot, preventing external exposure","product":"Microsoft 365 Copilot","priority":"High","stakeholders":"Security, Compliance, IT Administration","referenceUrl":"https://learn.microsoft.com/en-us/purview/dlp-microsoft-teams"},
+  {"category":"Microsoft 365 Copilot & Agents","control":"Sensitivity Labels Enforced in Copilot","description":"Enforces sensitivity classification on data accessed by Copilot and restricts processing based on labels","product":"Microsoft 365 Copilot","priority":"High","stakeholders":"Compliance, Information Protection, IT Administration","referenceUrl":"https://learn.microsoft.com/en-us/purview/sensitivity-labels"},
+  {"category":"Microsoft 365 Copilot & Agents","control":"Oversharing Prevention & Permission Validation","description":"Prevents Copilot from accessing or summarizing SharePoint/Teams data that user lacks permission to view","product":"Microsoft 365 Copilot","priority":"High","stakeholders":"Security, IT Administration, Compliance","referenceUrl":"https://learn.microsoft.com/en-us/copilot/microsoft-365/microsoft-365-copilot-privacy"},
+  {"category":"Microsoft 365 Copilot & Agents","control":"Restricted SharePoint Search Scope for Copilot","description":"Narrows Copilot access to approved document repositories, preventing exposure of restricted content","product":"Microsoft 365 Copilot","priority":"Medium","stakeholders":"Governance, Information Management, IT Administration","referenceUrl":"https://learn.microsoft.com/en-us/copilot/microsoft-365/microsoft-365-copilot-privacy"},
+
+  {"category":"Microsoft Defender for Cloud","control":"AI Threat Protection — Suspicious API Usage","description":"Detects anomalous patterns in AI service consumption (e.g., token spikes, unusual sources, data exfiltration attempts)","product":"Microsoft Defender for Cloud","priority":"High","stakeholders":"Security Operations, Threat Detection, AI Teams","referenceUrl":"https://learn.microsoft.com/en-us/azure/defender-for-cloud/ai-threat-protection"},
+  {"category":"Microsoft Defender for Cloud","control":"AI Workload Posture Management (CSPM for AI)","description":"Continuous scanning of AI configurations, model access policies, and compliance with security baselines","product":"Microsoft Defender for Cloud","priority":"High","stakeholders":"Security Architects, Compliance, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/defender-for-cloud/ai-security-posture"},
+  {"category":"Microsoft Defender for Cloud","control":"Security Recommendations for AI Services","description":"Automated security hardening recommendations specific to Azure OpenAI, AI Foundry, and other AI services","product":"Microsoft Defender for Cloud","priority":"Medium","stakeholders":"Security Engineers, Cloud Architects, DevOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/defender-for-cloud/recommendations-reference-ai"},
+  {"category":"Microsoft Defender for Cloud","control":"Attack Path Analysis for AI Resources","description":"Maps lateral movement and escalation paths targeting AI services to identify exploitation chains","product":"Microsoft Defender for Cloud","priority":"Medium","stakeholders":"Security Architects, Threat Assessment, Incident Response","referenceUrl":"https://learn.microsoft.com/en-us/azure/defender-for-cloud/how-to-manage-attack-path"},
+  {"category":"Microsoft Defender for Cloud","control":"Threat Detection for Azure OpenAI","description":"Real-time alerts for unauthorized API calls, policy violations, and suspicious model access patterns","product":"Microsoft Defender for Cloud","priority":"High","stakeholders":"Security Operations, Incident Response, AI Teams","referenceUrl":"https://learn.microsoft.com/en-us/azure/defender-for-cloud/ai-threat-protection"},
+
+  {"category":"AI Evaluations","control":"Groundedness & Relevance Assessment","description":"Programmatically measures how well AI responses are grounded in source documents and relevant to queries","product":"Azure AI Evaluation SDK","priority":"Medium","stakeholders":"AI Engineers, Data Scientists, QA","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/evaluate-generative-ai-app"},
+  {"category":"AI Evaluations","control":"Adversarial Simulation for AI Security Testing","description":"Automated generation and testing of adversarial prompts to identify jailbreaks and safety bypasses","product":"Azure AI Evaluation SDK","priority":"High","stakeholders":"Security, AI Engineers, Red Team","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/simulator-interaction-data"},
+  {"category":"AI Evaluations","control":"Content Safety Evaluations — Harm Categories","description":"Automated testing for hate, violence, self-harm, sexual content, and custom harm categories in model outputs","product":"Azure AI Evaluation SDK","priority":"High","stakeholders":"Security, Compliance, Content Moderation","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/evaluate-generative-ai-app"},
+  {"category":"AI Evaluations","control":"Custom Evaluators for Domain-Specific Risks","description":"Extensible evaluation framework for organization-specific risk categories and domain knowledge validation","product":"Azure AI Evaluation SDK","priority":"Medium","stakeholders":"AI Engineers, Domain Experts, Security","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/evaluate-sdk"},
+
+  {"category":"Red Teaming","control":"PyRIT — Python Risk Identification Toolkit","description":"Open-source framework for automated red teaming, jailbreak simulation, and adversarial prompt generation against AI systems","product":"PyRIT (Microsoft)","priority":"High","stakeholders":"Security, Red Team, AI Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/red-teaming"},
+  {"category":"Red Teaming","control":"Manual Red Teaming Operations Guide","description":"Structured methodology for security researchers to conduct targeted attacks on AI systems and document findings","product":"Microsoft AI Red Team","priority":"Medium","stakeholders":"Security, Red Team, Architects","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/red-teaming"},
+  {"category":"Red Teaming","control":"AI Red Team Playbook & Best Practices","description":"Guidelines for responsible red teaming including scope, authorization, escalation procedures, and findings management","product":"Microsoft AI Red Team","priority":"Low","stakeholders":"Security, Risk Management, Governance","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/red-teaming"},
+
+  {"category":"Key Management","control":"Securing AI API Keys in Key Vault","description":"Centralized storage and rotation of API keys for Azure OpenAI and AI services with access logging","product":"Azure Key Vault","priority":"High","stakeholders":"Security, DevOps, AI Engineers","referenceUrl":"https://learn.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal"},
+  {"category":"Key Management","control":"Managed Identity Authentication (Eliminate Keys)","description":"Eliminates hardcoded credentials by using managed identities for AI service-to-service authentication","product":"Azure Key Vault / Managed Identity","priority":"High","stakeholders":"Security, DevOps, Cloud Architects","referenceUrl":"https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-manage-user-assigned-managed-identities"},
+
+  {"category":"Monitoring & Observability","control":"AI Usage Telemetry & Token Consumption Monitoring","description":"Real-time tracking of model invocations, token usage, API latency, and cost attribution per consumer","product":"Azure Monitor","priority":"High","stakeholders":"Operations, FinOps, DevOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/monitoring"},
+  {"category":"Monitoring & Observability","control":"Prompt & Response Logging for Audit","description":"Centralized capture of all prompts and completions with timestamps for compliance and forensic investigation","product":"Azure Monitor / Application Insights","priority":"High","stakeholders":"Compliance, Security, Operations","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/diagnostic-logging"},
+  {"category":"Monitoring & Observability","control":"Azure OpenAI Diagnostic Logging","description":"Capture detailed diagnostic logs including request/response metadata for performance analysis and troubleshooting","product":"Azure Monitor","priority":"Medium","stakeholders":"Operations, Observability, Incident Response","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/diagnostic-logging"},
+  {"category":"Monitoring & Observability","control":"Alerting on Anomalous AI Usage Patterns","description":"Proactive detection of unusual token spikes, geographic access patterns, request failures, or cost deviations","product":"Azure Monitor Alerts","priority":"Medium","stakeholders":"Operations, Security, FinOps","referenceUrl":"https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview"},
+
+  {"category":"Responsible AI & Governance","control":"Responsible AI Transparency Notes","description":"Mandatory documentation of model capabilities, limitations, intended use, and potential risks for stakeholder alignment","product":"Microsoft Responsible AI","priority":"Medium","stakeholders":"Product Team, Legal, Governance, Communications","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/responsible-use-of-ai-overview"},
+  {"category":"Responsible AI & Governance","control":"AI Impact Assessments & Risk Scoring","description":"Formal evaluation of AI model impact on users, society, and organization with risk mitigation planning","product":"Microsoft Responsible AI","priority":"Medium","stakeholders":"Governance, Product Teams, Legal, Ethics Board","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-services/responsible-use-of-ai-overview"},
+  {"category":"Responsible AI & Governance","control":"Model Cards & Documentation Requirements","description":"Standardized model cards documenting architecture, training data, performance metrics, and known limitations","product":"Microsoft Responsible AI","priority":"Low","stakeholders":"AI Engineers, Data Scientists, Documentation Team","referenceUrl":"https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/model-catalog-overview"}
+];
+
+const CATEGORY_ICONS={"Azure AI Content Safety":"🛡️","Microsoft Purview":"🔍","Microsoft Entra ID":"🔐","Network Security":"🌐","AI Gateway (Azure API Management)":"🚪","Azure AI Foundry":"🏭","Microsoft 365 Copilot & Agents":"💼","Microsoft Defender for Cloud":"🛡️","AI Evaluations":"📊","Red Teaming":"🔴","Key Management":"🔑","Monitoring & Observability":"📈","Responsible AI & Governance":"⚖️"};
+
+const WEIGHT={High:3,Medium:2,Low:1};
+let checkedState={};
+
+// Load state from localStorage
+try{const s=localStorage.getItem('guardrails-state');if(s)checkedState=JSON.parse(s);}catch(e){}
+
+function saveState(){try{localStorage.setItem('guardrails-state',JSON.stringify(checkedState));}catch(e){}}
+
+function getCategories(){
+  const cats=new Map();
+  CHECKLIST_DATA.forEach((item,i)=>{
+    if(!cats.has(item.category))cats.set(item.category,[]);
+    cats.get(item.category).push({...item,index:i});
+  });
+  return cats;
+}
+
+function calcScore(){
+  let checked=0,total=0,checkedCount=0;
+  CHECKLIST_DATA.forEach((item,i)=>{
+    const w=WEIGHT[item.priority]||1;
+    total+=w;
+    if(checkedState[i]){checked+=w;checkedCount++;}
+  });
+  const score=total>0?Math.round((checked/total)*100):0;
+  return{score,checkedCount,total:CHECKLIST_DATA.length,checked,totalWeight:total};
+}
+
+function getScoreColor(score){
+  if(score<34)return'var(--high)';
+  if(score<67)return'var(--medium)';
+  return'var(--low)';
+}
+
+function updateScore(){
+  const{score,checkedCount}=calcScore();
+  const color=getScoreColor(score);
+  document.getElementById('scoreNumber').textContent=score;
+  document.getElementById('scoreCircle').style.setProperty('--score-pct',score+'%');
+  document.getElementById('scoreCircle').style.background=`conic-gradient(${color} 0%,${color} ${score}%,var(--surface2) ${score}%)`;
+  const bar=document.getElementById('scoreBar');
+  bar.style.width=score+'%';
+  bar.style.background=color;
+  document.getElementById('scoreDetails').textContent=`${checkedCount} of ${CHECKLIST_DATA.length} controls implemented`;
+  updateCategoryBars();
+  updateStats();
+}
+
+function updateCategoryBars(){
+  const cats=getCategories();
+  cats.forEach((items,catName)=>{
+    const el=document.querySelector(`[data-cat="${CSS.escape(catName)}"] .category-bar-fill`);
+    const prog=document.querySelector(`[data-cat="${CSS.escape(catName)}"] .category-progress`);
+    if(!el)return;
+    const total=items.length;
+    const done=items.filter(it=>checkedState[it.index]).length;
+    const pct=Math.round((done/total)*100);
+    el.style.width=pct+'%';
+    if(prog)prog.textContent=`${done}/${total}`;
+  });
+}
+
+function updateStats(){
+  const{score,checkedCount}=calcScore();
+  const high=CHECKLIST_DATA.filter((d,i)=>d.priority==='High'&&checkedState[i]).length;
+  const highTotal=CHECKLIST_DATA.filter(d=>d.priority==='High').length;
+  const med=CHECKLIST_DATA.filter((d,i)=>d.priority==='Medium'&&checkedState[i]).length;
+  const medTotal=CHECKLIST_DATA.filter(d=>d.priority==='Medium').length;
+  const low=CHECKLIST_DATA.filter((d,i)=>d.priority==='Low'&&checkedState[i]).length;
+  const lowTotal=CHECKLIST_DATA.filter(d=>d.priority==='Low').length;
+  document.getElementById('statsBar').innerHTML=
+    `<span>Score: <strong>${score}/100</strong></span>`+
+    `<span style="color:var(--high)">High: ${high}/${highTotal}</span>`+
+    `<span style="color:var(--medium)">Medium: ${med}/${medTotal}</span>`+
+    `<span style="color:var(--low)">Low: ${low}/${lowTotal}</span>`+
+    `<span>Total: ${checkedCount}/${CHECKLIST_DATA.length}</span>`;
+}
+
+function toggleCheck(index){
+  checkedState[index]=!checkedState[index];
+  const el=document.querySelector(`[data-index="${index}"]`);
+  if(el){
+    const cb=el.querySelector('.check');
+    const item=el;
+    if(checkedState[index]){cb.classList.add('checked');item.classList.add('checked');}
+    else{cb.classList.remove('checked');item.classList.remove('checked');}
+  }
+  saveState();
+  updateScore();
+}
+
+function toggleCategory(catName,check){
+  const cats=getCategories();
+  const items=cats.get(catName)||[];
+  items.forEach(it=>{
+    checkedState[it.index]=check;
+    const el=document.querySelector(`[data-index="${it.index}"]`);
+    if(el){
+      const cb=el.querySelector('.check');
+      if(check){cb.classList.add('checked');el.classList.add('checked');}
+      else{cb.classList.remove('checked');el.classList.remove('checked');}
+    }
+  });
+  saveState();
+  updateScore();
+}
+
+function render(filter='all',search=''){
+  const container=document.getElementById('checklistContainer');
+  const cats=getCategories();
+  let html='';
+  const searchLower=search.toLowerCase();
+
+  cats.forEach((items,catName)=>{
+    let filtered=items;
+    if(filter!=='all')filtered=filtered.filter(it=>it.priority===filter);
+    if(search)filtered=filtered.filter(it=>
+      it.control.toLowerCase().includes(searchLower)||
+      it.description.toLowerCase().includes(searchLower)||
+      it.product.toLowerCase().includes(searchLower)||
+      it.category.toLowerCase().includes(searchLower)||
+      it.stakeholders.toLowerCase().includes(searchLower)
+    );
+    if(filtered.length===0)return;
+
+    const icon=CATEGORY_ICONS[catName]||'📋';
+    const done=filtered.filter(it=>checkedState[it.index]).length;
+    html+=`<div class="category open" data-cat="${catName}">
+      <div class="category-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="category-title"><span class="category-icon">${icon}</span>${catName}</div>
+        <div class="category-meta">
+          <div class="category-actions">
+            <button class="cat-btn" onclick="event.stopPropagation();toggleCategory('${catName.replace(/'/g,"\\'")}',true)">Select All</button>
+            <button class="cat-btn" onclick="event.stopPropagation();toggleCategory('${catName.replace(/'/g,"\\'")}',false)">Clear</button>
+          </div>
+          <span class="category-progress">${done}/${filtered.length}</span>
+          <div class="category-bar"><div class="category-bar-fill" style="width:${filtered.length?Math.round((done/filtered.length)*100):0}%"></div></div>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="controls-list">`;
+
+    filtered.forEach(item=>{
+      const isChecked=checkedState[item.index];
+      html+=`<div class="control-item${isChecked?' checked':''}" data-index="${item.index}">
+        <div class="check${isChecked?' checked':''}" tabindex="0" role="checkbox" aria-checked="${isChecked}" aria-label="${item.control}" onclick="toggleCheck(${item.index})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleCheck(${item.index})}"></div>
+        <div class="control-details">
+          <div class="control-top">
+            <span class="control-name">${item.control}</span>
+            <span class="badge badge-${item.priority.toLowerCase()}">${item.priority}</span>
+          </div>
+          <div class="control-desc">${item.description}</div>
+          <div class="control-bottom">
+            <span class="badge badge-product">${item.product}</span>
+            <span class="badge badge-stakeholder">${item.stakeholders}</span>
+            <a class="ref-link" href="${item.referenceUrl}" target="_blank" rel="noopener noreferrer">
+              Docs <svg viewBox="0 0 16 16" fill="currentColor"><path d="M10 1H14V5M14 1L7 8M12 9V13C12 13.6 11.6 14 11 14H3C2.4 14 2 13.6 2 13V5C2 4.4 2.4 4 3 4H7" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+
+  if(!html)html='<div style="text-align:center;padding:3rem;color:var(--text-muted)">No controls match your search.</div>';
+  container.innerHTML=html;
+}
+
+function downloadPDF(){
+  const el=document.querySelector('.main');
+  // Temporarily open all categories for PDF
+  document.querySelectorAll('.category').forEach(c=>c.classList.add('open'));
+  const opt={
+    margin:[10,10,10,10],
+    filename:'GuardRails-GenAI-Security-Checklist.pdf',
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true,backgroundColor:'#0d1117'},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['avoid-all','css','legacy']}
+  };
+  // Add score header to PDF
+  const header=document.querySelector('.header').cloneNode(true);
+  header.style.position='relative';
+  const wrapper=document.createElement('div');
+  wrapper.style.background='#0d1117';
+  wrapper.style.color='#e6edf3';
+  wrapper.style.fontFamily="'Segoe UI',system-ui,sans-serif";
+  wrapper.appendChild(header);
+  wrapper.appendChild(el.cloneNode(true));
+  // Remove buttons from clone
+  wrapper.querySelectorAll('.btn,.cat-btn,.search-section').forEach(b=>b.remove());
+  html2pdf().set(opt).from(wrapper).save();
+}
+
+function resetAll(){
+  checkedState={};
+  saveState();
+  render(currentFilter,currentSearch);
+  updateScore();
+}
+
+let currentFilter='all',currentSearch='';
+
+// Filter pills
+document.getElementById('filterPills').addEventListener('click',e=>{
+  const pill=e.target.closest('.filter-pill');
+  if(!pill)return;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+  currentFilter=pill.dataset.filter;
+  render(currentFilter,currentSearch);
+  updateScore();
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input',e=>{
+  currentSearch=e.target.value;
+  render(currentFilter,currentSearch);
+  updateScore();
+});
+
+// Init
+render();
+updateScore();
+</script>
+</body>
+</html>
