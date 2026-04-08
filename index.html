@@ -159,9 +159,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 /* Animations */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .category{animation:fadeIn 0.3s ease forwards}
-#pdf-render{position:fixed;top:0;left:0;width:800px;z-index:99999;background:#fff;overflow:auto;pointer-events:none}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -465,54 +465,95 @@ function render(filter='all',search=''){
 
 function downloadPDF(){
   const btn=document.querySelector('.btn-primary');
-  btn.textContent='Generating PDF…';btn.disabled=true;
-  const wrap=document.createElement('div');
-  wrap.id='pdf-render';
-  let h='<div style="border-bottom:3px solid #0078d4;padding-bottom:12px;margin-bottom:16px;">';
-  h+='<h1 style="font-size:22px;color:#0078d4;margin:0;font-family:Segoe UI,sans-serif;">GuardRails &mdash; GenAI Security &amp; Governance Checklist</h1>';
-  h+='<p style="font-size:11px;color:#555;margin:4px 0 0;font-family:Segoe UI,sans-serif;">Know your AI blind spots before attackers do.</p>';
-  const{score,checkedCount}=calcScore();
-  h+=`<p style="font-size:13px;margin:8px 0 0;font-family:Segoe UI,sans-serif;"><strong>Score: ${score}/100</strong> &mdash; ${checkedCount} of ${CHECKLIST_DATA.length} controls implemented</p>`;
-  h+='</div>';
-  const cats=getCategories();
-  cats.forEach((items,catName)=>{
-    const icon=CATEGORY_ICONS[catName]||'\uD83D\uDCCB';
-    const done=items.filter(it=>checkedState[it.index]).length;
-    h+=`<div style="margin-bottom:10px;">`;
-    h+=`<div style="background:#f0f4f8;padding:7px 12px;border-radius:4px;font-size:13px;font-weight:600;color:#1a1a1a;border-left:4px solid #0078d4;font-family:Segoe UI,sans-serif;">${icon} ${catName} <span style="font-weight:400;color:#555;font-size:11px;">(${done}/${items.length})</span></div>`;
-    items.forEach(item=>{
-      const ck=checkedState[item.index];
-      const mark=ck?'\u2611':'\u2610';
-      const ns=ck?'text-decoration:line-through;opacity:0.5;':'';
-      const pc={High:'#d32f2f',Medium:'#ed6c02',Low:'#2e7d32'};
-      h+=`<div style="padding:5px 12px 5px 24px;border-bottom:1px solid #eee;font-size:11px;line-height:1.5;font-family:Segoe UI,sans-serif;">`;
-      h+=`<span style="font-size:13px;">${mark}</span> `;
-      h+=`<strong style="${ns}">${item.control}</strong> `;
-      h+=`<span style="color:${pc[item.priority]||'#555'};font-size:9px;font-weight:700;">[${item.priority}]</span><br/>`;
-      h+=`<span style="color:#555;">${item.description}</span><br/>`;
-      h+=`<span style="color:#888;font-size:9px;">Product: ${item.product} | Stakeholders: ${item.stakeholders}</span>`;
-      if(item.referenceUrl)h+=` <a href="${item.referenceUrl}" style="color:#0078d4;font-size:9px;">Docs \u2197</a>`;
-      h+='</div>';
+  btn.textContent='Generating PDF\u2026';btn.disabled=true;
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=doc.internal.pageSize.getWidth();
+    const ph=doc.internal.pageSize.getHeight();
+    const mx=14,my=14;
+    const cw=pw-mx*2;
+    // Colors
+    const azure=[0,120,212],white=[255,255,255],darkText=[26,26,26],gray=[100,100,100],lightGray=[200,200,200];
+    const priColor={High:[211,47,47],Medium:[237,108,2],Low:[46,125,50]};
+    // Header
+    doc.setFillColor(...azure);
+    doc.rect(0,0,pw,28,"F");
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(...white);
+    doc.text('GuardRails',mx,12);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(200,220,255);
+    doc.text('Enterprise GenAI Security & Governance Checklist',mx,18);
+    const{score,checkedCount}=calcScore();
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...white);
+    doc.text(`Score: ${score}/100  |  ${checkedCount} of ${CHECKLIST_DATA.length} controls implemented`,mx,25);
+    let y=34;
+    // Categories
+    const cats=getCategories();
+    cats.forEach((items,catName)=>{
+      // Check space for category header + at least 1 row
+      if(y>ph-30){doc.addPage();y=my;}
+      const done=items.filter(it=>checkedState[it.index]).length;
+      const icon=CATEGORY_ICONS[catName]||'';
+      // Category header bar
+      doc.setFillColor(230,240,250);
+      doc.rect(mx,y,cw,7,"F");
+      doc.setDrawColor(...azure);doc.setLineWidth(0.8);
+      doc.line(mx,y,mx,y+7);
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...darkText);
+      doc.text(`${icon} ${catName}  (${done}/${items.length})`,mx+3,y+5);
+      y+=9;
+      // Table for controls
+      const rows=items.map(item=>{
+        const ck=checkedState[item.index];
+        return[
+          ck?'\u2713':'',
+          item.control,
+          item.priority,
+          item.description,
+          item.stakeholders
+        ];
+      });
+      doc.autoTable({
+        startY:y,
+        margin:{left:mx,right:mx},
+        head:[['','Control','Priority','Description','Stakeholders']],
+        body:rows,
+        theme:'grid',
+        styles:{fontSize:7,cellPadding:1.5,lineColor:[220,220,220],lineWidth:0.2,textColor:darkText,font:'helvetica',overflow:'linebreak'},
+        headStyles:{fillColor:azure,textColor:white,fontStyle:'bold',fontSize:7},
+        columnStyles:{
+          0:{cellWidth:6,halign:'center',fontStyle:'bold',textColor:[46,125,50]},
+          1:{cellWidth:35,fontStyle:'bold'},
+          2:{cellWidth:14,halign:'center',fontSize:6},
+          3:{cellWidth:cw-35-14-6-30},
+          4:{cellWidth:30,fontSize:6,textColor:gray}
+        },
+        didParseCell:function(data){
+          if(data.section==='body'&&data.column.index===2){
+            const p=data.cell.raw;
+            if(p==='High')data.cell.styles.textColor=[211,47,47];
+            else if(p==='Medium')data.cell.styles.textColor=[237,108,2];
+            else if(p==='Low')data.cell.styles.textColor=[46,125,50];
+            data.cell.styles.fontStyle='bold';
+          }
+          if(data.section==='body'&&data.column.index===0&&data.cell.raw==='\u2713'){
+            data.cell.styles.textColor=[46,125,50];data.cell.styles.fontSize=9;
+          }
+        }
+      });
+      y=doc.lastAutoTable.finalY+4;
     });
-    h+='</div>';
-  });
-  h+='<div style="text-align:center;font-size:9px;color:#888;margin-top:16px;font-family:Segoe UI,sans-serif;">Generated by GuardRails &mdash; https://aka.ms/genai-guardrails-checklist</div>';
-  wrap.innerHTML=h;
-  document.body.appendChild(wrap);
-  html2pdf().set({
-    margin:[8,8,8,8],
-    filename:'GuardRails-GenAI-Security-Checklist.pdf',
-    image:{type:'jpeg',quality:0.95},
-    html2canvas:{scale:2,useCORS:true,logging:false,width:800,windowWidth:800},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['avoid-all','css','legacy']}
-  }).from(wrap).save().then(()=>{
-    wrap.remove();
-    btn.innerHTML='\uD83D\uDCC4 Download PDF';btn.disabled=false;
-  }).catch(()=>{
-    wrap.remove();
-    btn.innerHTML='\uD83D\uDCC4 Download PDF';btn.disabled=false;
-  });
+    // Footer
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){
+      doc.setPage(i);
+      doc.setFontSize(7);doc.setTextColor(...gray);doc.setFont('helvetica','normal');
+      doc.text('Generated by GuardRails | https://aka.ms/genai-guardrails-checklist',mx,ph-6);
+      doc.text(`Page ${i} of ${pages}`,pw-mx,ph-6,{align:'right'});
+    }
+    doc.save('GuardRails-GenAI-Security-Checklist.pdf');
+  }catch(e){console.error('PDF generation failed:',e);}
+  btn.innerHTML='\uD83D\uDCC4 Download PDF';btn.disabled=false;
 }
 
 function resetAll(){
